@@ -6,9 +6,9 @@ import 'package:http/http.dart' as http;
 class GptService {
   static String? apiKey = dotenv.env['apiKey'];
   static String apiUrl =
-      'https://api.openai.com/v1/chat/completions'; // ChatGPT API 엔드포인트 URL
+      'https://api.openai.com/v1/completions'; // ChatGPT API 엔드포인트 URL
 
-  Future<String> fetchChatGPTResponse(String message) async {
+  Future<String> fetchChatGPTResponse(String prompt) async {
     final response = await http.post(
       Uri.parse(apiUrl),
       headers: {
@@ -16,18 +16,19 @@ class GptService {
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        'messages': [
-          {'role': 'system', 'content': 'You are a helpful assistant.'},
-          {'role': 'user', 'content': message}
-        ]
+        "model": "text-davinci-003",
+        'prompt': prompt,
+        'max_tokens': 1000,
+        'temperature': 0,
+        'top_p': 1,
+        'frequency_penalty': 0,
+        'presence_penalty': 0
       }),
     );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final completions = data['choices'][0]['message']['content'];
-      return completions;
-    } else {
-      throw Exception('Failed to fetch response from ChatGPT API');
-    }
+
+    Map<String, dynamic> newresponse =
+        jsonDecode(utf8.decode(response.bodyBytes));
+
+    return newresponse['choices'][0]['text'];
   }
 }
